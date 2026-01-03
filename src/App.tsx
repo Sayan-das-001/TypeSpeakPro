@@ -15,7 +15,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <GoogleOAuthProvider clientId="276418971864-ill6hhmk3nut52g75mvdthqhb876i2i6.apps.googleusercontent.com">
+  <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
