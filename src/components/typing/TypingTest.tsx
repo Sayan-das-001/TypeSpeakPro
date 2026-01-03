@@ -299,18 +299,19 @@ const TypingTest = ({ onComplete }: TypingTestProps) => {
                         time_duration: selectedTime,
                         mode: mode
                     })
-                    .select(); // Select to verify return
+                    .select();
 
                 if (error) {
                     console.error("Supabase SAVE ERROR:", error);
-                    toast.error(`Failed to save: ${error.message}`);
+                    // Don't toast error to user if it's just a config issue, maybe silent fail or debug log
+                    // toast.error(`Failed to save history: ${error.message}`); 
                 } else {
-                    console.log("Result saved successfully! Data:", data);
+                    console.log("Result saved successfully!", data);
                     toast.success("Result saved to history!");
                 }
             } catch (err) {
                 console.error("Unexpected error saving result:", err);
-                toast.error("Unexpected error while saving.");
+                // Prevent crash
             }
         } else {
             console.warn("User ID missing, cannot save result. User object:", user);

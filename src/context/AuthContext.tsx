@@ -34,12 +34,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Helper to fetch Supabase ID
     const fetchSupabaseUser = async (email: string) => {
-        const { data, error } = await supabase
-            .from('users')
-            .select('id')
-            .eq('email', email)
-            .single();
-        return data?.id;
+        try {
+            const { data, error } = await supabase
+                .from('users')
+                .select('id')
+                .eq('email', email)
+                .single();
+            if (error) throw error;
+            return data?.id;
+        } catch (error) {
+            console.error("Error fetching user from Supabase:", error);
+            return null;
+        }
     }
 
     useEffect(() => {
@@ -62,8 +68,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     console.log("Supabase ID fetched for auto-login:", id);
                     if (id) {
                         setUser(prev => prev ? { ...prev, id } : null);
-                    } else {
-                        console.warn("No Supabase ID found for user:", decoded.email);
                     }
                 } catch (error) {
                     console.error("Invalid token found", error);
@@ -90,29 +94,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(userData);
             localStorage.setItem('google_token', token);
 
-            // Sync with Supabase
-            console.log("Syncing user with Supabase...", userData.email);
-            const { data, error } = await supabase
-                .from('users')
-                .upsert({
-                    email: userData.email,
-                    name: userData.name,
-                    picture: userData.picture,
-                    google_sub: userData.sub,
-                }, { onConflict: 'email' })
-                .select()
-                .single();
-
-            if (error) {
-                console.error("Error syncing user to Supabase:", error);
-            } else if (data) {
-                console.log("User synced! Got ID:", data.id);
-                // Update state with the real ID from DB
-                setUser({ ...userData, id: data.id });
-            }
-
             toast.success("Successfully logged in!");
             closeLoginModal(); // Close modal on successful login
+
+            // Sync with Supabase (Background)
+            try {
+                console.log("Syncing user with Supabase...", userData.email);
+                const { data, error } = await supabase
+                    .from('users')
+                    .upsert({
+                        email: userData.email,
+                        name: userData.name,
+                        picture: userData.picture,
+                        google_sub: userData.sub,
+                    }, { onConflict: 'email' })
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                if (data) {
+                    console.log("User synced! Got ID:", data.id);
+                    // Update state with the real ID from DB
+                    setUser(prev => prev ? { ...prev, id: data.id } : null);
+                }
+            } catch (dbError) {
+                console.error("Database sync failed (non-fatal):", dbError);
+                // We don't block login if DB fails, but user won't have ID for saving results
+            }
+
         } catch (error) {
             console.error("Login failed", error);
             toast.error("Failed to login. Please try again.");
