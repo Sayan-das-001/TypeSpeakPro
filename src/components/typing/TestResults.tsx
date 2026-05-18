@@ -214,7 +214,7 @@ const TestResults = ({ open, onOpenChange, stats, onRestart }: TestResultsProps)
                 </div>
 
                 {/* Interaction Buttons - Fixed at bottom on small screens for easy access */}
-                <div className="sticky bottom-0 bg-background/80 backdrop-blur-xl md:bg-transparent md:backdrop-blur-none p-4 md:p-6 flex flex-wrap justify-center gap-2 md:gap-3 border-t md:border-t-0 border-white/5">
+                <div className="sticky bottom-0 bg-background/80 backdrop-blur-xl md:bg-transparent md:backdrop-blur-none p-4 md:p-6 flex flex-wrap justify-center gap-2 md:gap-3 border-t items-center md:border-t-0 border-white/5">
                     <Button
                         variant="outline"
                         size="sm"
