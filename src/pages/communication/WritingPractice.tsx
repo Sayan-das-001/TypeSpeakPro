@@ -88,7 +88,7 @@ const WritingPractice = () => {
                                     <div className="flex items-center gap-2 text-teal-400 text-sm font-medium uppercase tracking-wider">
                                         <PenTool className="w-4 h-4" /> Writing Prompt
                                     </div>
-                                    <Button variant="ghost" size="sm" onClick={handleNewTopic} className="text-muted-foreground hover:text-white">
+                                    <Button variant="ghost" size="sm" onClick={handleNewTopic} className="text-muted-foreground hover:text-foreground">
                                         <RefreshCw className="w-4 h-4 mr-2" /> New Topic
                                     </Button>
                                 </div>
@@ -96,14 +96,14 @@ const WritingPractice = () => {
                             </CardHeader>
                             <CardContent>
                                 <Textarea
-                                    className="min-h-[300px] bg-black/40 border-white/10 text-lg leading-relaxed resize-none focus:border-teal-500/50 p-6"
+                                    className="min-h-[300px] bg-background border-border text-lg leading-relaxed resize-none focus:border-teal-500/50 p-6"
                                     placeholder="Start writing here..."
                                     value={text}
                                     onChange={(e) => setText(e.target.value)}
                                     disabled={analysisAction.isPending}
                                     aria-describedby="writing-status"
                                 />
-                                <div className="mt-4 flex justify-between items-center text-sm text-neutral-500">
+                                <div className="mt-4 flex justify-between items-center text-sm text-muted-foreground">
                                     <span>{text.split(/\s+/).filter(w => w.length > 0).length} words</span>
                                     <Button
                                         onClick={handleAnalyze}
@@ -133,31 +133,31 @@ const WritingPractice = () => {
                     {result && (
                         <div className="w-full lg:w-[450px] space-y-6 animate-in slide-in-from-right-4">
                             {/* Score Card */}
-                            <Card className="bg-neutral-900/80 border-white/5 backdrop-blur-xl">
+                            <Card className="bg-card/80 border-border backdrop-blur-xl">
                                 <CardHeader>
                                     <CardTitle>AI Feedback</CardTitle>
                                     <CardDescription>{result.feedback}</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
                                     <div className="grid grid-cols-3 gap-4 text-center">
-                                        <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                        <div className="p-3 bg-muted rounded-lg border border-border">
                                             <div className="text-2xl font-bold text-teal-400">{result.grammar_score}</div>
-                                            <div className="text-[10px] uppercase text-neutral-500 mt-1">Grammar</div>
+                                            <div className="text-[10px] uppercase text-muted-foreground mt-1">Grammar</div>
                                         </div>
-                                        <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                        <div className="p-3 bg-muted rounded-lg border border-border">
                                             <div className="text-2xl font-bold text-purple-400">{result.vocabulary_score}</div>
-                                            <div className="text-[10px] uppercase text-neutral-500 mt-1">Vocab</div>
+                                            <div className="text-[10px] uppercase text-muted-foreground mt-1">Vocab</div>
                                         </div>
-                                        <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                        <div className="p-3 bg-muted rounded-lg border border-border">
                                             <div className="text-2xl font-bold text-blue-400">{result.tone_score}</div>
-                                            <div className="text-[10px] uppercase text-neutral-500 mt-1">Tone</div>
+                                            <div className="text-[10px] uppercase text-muted-foreground mt-1">Tone</div>
                                         </div>
                                     </div>
 
                                     {/* Corrections */}
                                     {result.corrections.length > 0 && (
                                         <div className="space-y-3">
-                                            <h4 className="font-semibold text-sm text-neutral-300 flex items-center gap-2">
+                                            <h4 className="font-semibold text-sm text-foreground flex items-center gap-2">
                                                 <CheckCircle className="w-4 h-4 text-red-400" /> Corrections
                                             </h4>
                                             <ul className="space-y-2">
@@ -172,10 +172,10 @@ const WritingPractice = () => {
 
                                     {/* Better Version */}
                                     <div className="space-y-3">
-                                        <h4 className="font-semibold text-sm text-neutral-300 flex items-center gap-2">
+                                        <h4 className="font-semibold text-sm text-foreground flex items-center gap-2">
                                             <Sparkles className="w-4 h-4 text-yellow-400" /> Improved Version
                                         </h4>
-                                        <div className="text-sm bg-yellow-500/5 border border-yellow-500/20 p-4 rounded-lg text-neutral-300 leading-relaxed italic">
+                                        <div className="text-sm bg-yellow-500/5 border border-yellow-500/20 p-4 rounded-lg text-foreground leading-relaxed italic">
                                             "{result.better_version}"
                                         </div>
                                     </div>

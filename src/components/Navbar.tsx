@@ -135,11 +135,11 @@ const { theme, toggleTheme } = useTheme();
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate("/dashboard")} className="cursor-pointer hover:bg-white/5 focus:bg-white/5 transition-colors">
+                <DropdownMenuItem onClick={() => navigate("/dashboard")} className="cursor-pointer hover:bg-muted focus:bg-muted hover:text-foreground focus:text-foreground transition-colors">
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile Dashboard</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-400 hover:text-red-300 focus:text-red-300 hover:bg-red-500/10 focus:bg-red-500/10 transition-colors">
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive hover:text-destructive focus:text-destructive hover:bg-destructive/10 focus:bg-destructive/10 transition-colors">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>

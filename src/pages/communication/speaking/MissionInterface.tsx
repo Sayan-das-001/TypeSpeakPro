@@ -162,7 +162,7 @@ const MissionInterface: React.FC<MissionInterfaceProps> = ({ zoneId, onComplete,
             </div>
 
             {/* Chat Area */}
-            <Card className="flex-1 bg-neutral-900/80 border-white/5 backdrop-blur-md overflow-hidden flex flex-col relative">
+            <Card className="flex-1 bg-card/80 border-border backdrop-blur-md overflow-hidden flex flex-col relative">
                 {turn === 'INTRO' && (
                     <div className="absolute inset-0 z-10 bg-black/80 flex flex-col items-center justify-center text-center p-8 space-y-6">
                         <h2 className="text-3xl font-bold text-white">Mission Start</h2>
@@ -180,7 +180,7 @@ const MissionInterface: React.FC<MissionInterfaceProps> = ({ zoneId, onComplete,
                                 max-w-[80%] p-4 rounded-2xl text-lg leading-relaxed
                                 ${msg.role === 'user'
                                     ? 'bg-teal-500/20 border border-teal-500/30 text-teal-100 rounded-tr-none'
-                                    : 'bg-white/10 border border-white/5 text-neutral-200 rounded-tl-none'}
+                                    : 'bg-muted border border-border text-foreground rounded-tl-none'}
                             `}>
                                 {msg.text}
                             </div>
@@ -190,7 +190,7 @@ const MissionInterface: React.FC<MissionInterfaceProps> = ({ zoneId, onComplete,
                 </div>
 
                 {/* Interaction Bar */}
-                <div className="p-6 bg-black/20 border-t border-white/5 flex items-center justify-center gap-6">
+                <div className="p-6 bg-black/20 border-t border-border flex items-center justify-center gap-6">
                     <div className="absolute bottom-28 left-6 right-6">
                         <InlineError error={speechError || evaluationState.error} onRetry={startListening} />
                     </div>
@@ -214,7 +214,7 @@ const MissionInterface: React.FC<MissionInterfaceProps> = ({ zoneId, onComplete,
                                     h-20 w-20 rounded-full shadow-2xl transition-all duration-300
                                     ${isListening
                                         ? 'bg-red-500 hover:bg-red-600 animate-pulse ring-4 ring-red-500/30'
-                                        : turn === 'AI_SPEAKING' ? 'bg-neutral-700 opacity-50 cursor-wait'
+                                        : turn === 'AI_SPEAKING' ? 'bg-muted opacity-50 cursor-wait'
                                             : 'bg-teal-500 hover:bg-teal-600 ring-4 ring-teal-500/30'
                                     }
                                 `}

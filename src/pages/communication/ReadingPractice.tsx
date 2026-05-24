@@ -105,7 +105,7 @@ const ReadingPractice = () => {
                 {paragraphs.map((para, pIdx) => {
                     const words = para.split(/\s+/).filter(w => w.length > 0);
                     return (
-                        <p key={pIdx} className="text-xl md:text-2xl leading-relaxed font-medium text-neutral-300">
+                        <p key={pIdx} className="text-xl md:text-2xl leading-relaxed font-medium text-foreground">
                             {words.map((word, wIdx) => {
                                 const currentStatus = feedback[globalWordIndex]?.status || 'pending';
                                 const displayWord = feedback[globalWordIndex]?.word || word;
@@ -115,7 +115,7 @@ const ReadingPractice = () => {
                                     <span
                                         key={wIdx}
                                         className={`mr-2 transition-colors duration-300 ${currentStatus === 'correct' ? 'text-green-400' :
-                                                currentStatus === 'wrong' ? 'text-red-400' : 'text-neutral-300'
+                                                currentStatus === 'wrong' ? 'text-red-400' : 'text-foreground'
                                             }`}
                                     >
                                         {displayWord}{' '}
@@ -130,21 +130,21 @@ const ReadingPractice = () => {
     };
 
     return (
-        <div className="min-h-screen bg-neutral-950 text-white font-sans selection:bg-teal-500/30 flex flex-col">
+        <div className="min-h-screen bg-background text-foreground font-sans selection:bg-teal-500/30 flex flex-col">
             <Navbar forceOpaque={true} />
 
             <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
                 <div className="flex gap-4 mb-8">
                     <Button
                         variant="ghost"
-                        className="hover:text-teal-400 text-neutral-400 pl-0"
+                        className="hover:text-teal-400 text-muted-foreground pl-0"
                         onClick={() => navigate('/voice-practice/communication')}
                     >
                         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Modules
                     </Button>
                     <Button
                         variant="ghost"
-                        className="hover:text-teal-400 text-neutral-400 pl-0"
+                        className="hover:text-teal-400 text-muted-foreground pl-0"
                         onClick={() => navigate('/')}
                     >
                         <Home className="w-4 h-4 mr-2" /> Home
@@ -167,10 +167,10 @@ const ReadingPractice = () => {
                                     <div key={level} className="space-y-1">
                                         <button
                                             onClick={() => toggleLevel(level)}
-                                            className="w-full flex items-center justify-between p-3 rounded-lg bg-neutral-900/50 hover:bg-neutral-800 border border-white/5 transition-colors"
+                                            className="w-full flex items-center justify-between p-3 rounded-lg bg-card/50 hover:bg-muted border border-border transition-colors"
                                         >
                                             <span className="font-semibold">{level}</span>
-                                            {isExpanded ? <ChevronDown className="w-4 h-4 text-neutral-400" /> : <ChevronRight className="w-4 h-4 text-neutral-400" />}
+                                            {isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
                                         </button>
 
                                         {isExpanded && (
@@ -182,11 +182,11 @@ const ReadingPractice = () => {
                                                         onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') handlePassageChange(passage); }}
                                                         role="button"
                                                         tabIndex={0}
-                                                        className={`cursor-pointer transition-all border-white/5 hover:bg-white/5 ${selectedPassage.id === passage.id ? 'bg-teal-500/10 border-teal-500/50' : 'bg-transparent border-transparent'}`}
+                                                        className={`cursor-pointer transition-all border-border hover:bg-muted ${selectedPassage.id === passage.id ? 'bg-teal-500/10 border-teal-500/50' : 'bg-transparent border-transparent'}`}
                                                     >
                                                         <CardContent className="p-3">
                                                             <div className="flex justify-between items-center">
-                                                                <span className={`text-sm ${selectedPassage.id === passage.id ? 'text-teal-400 font-medium' : 'text-neutral-400'}`}>
+                                                                <span className={`text-sm ${selectedPassage.id === passage.id ? 'text-teal-400 font-medium' : 'text-muted-foreground'}`}>
                                                                     {passage.title}
                                                                 </span>
                                                             </div>
@@ -203,15 +203,15 @@ const ReadingPractice = () => {
 
                     {/* Main Practice Area */}
                     <div className="flex-1 space-y-6">
-                        <Card className="bg-neutral-900/50 border-white/5 min-h-[600px] flex flex-col relative overflow-hidden">
-                            <div className="p-6 border-b border-white/5 flex justify-between items-center">
+                        <Card className="bg-card/50 border-border min-h-[600px] flex flex-col relative overflow-hidden">
+                            <div className="p-6 border-b border-border flex justify-between items-center">
                                 <div>
                                     <h1 className="text-2xl font-bold mb-1">{selectedPassage.title}</h1>
-                                    <p className="text-neutral-400 text-sm">Read aloud. Goal: 80% accuracy to unlock next.</p>
+                                    <p className="text-muted-foreground text-sm">Read aloud. Goal: 80% accuracy to unlock next.</p>
                                 </div>
                                 <div className="text-right">
                                     <div className={`text-3xl font-bold ${accuracy >= 80 ? 'text-green-400' : 'text-teal-400'}`}>{accuracy}%</div>
-                                    <div className="text-xs text-neutral-500 uppercase tracking-widest">Accuracy</div>
+                                    <div className="text-xs text-muted-foreground uppercase tracking-widest">Accuracy</div>
                                 </div>
                             </div>
 
@@ -224,13 +224,13 @@ const ReadingPractice = () => {
 
                                 {/* Results Overlay (if finished) */}
                                 {hasAttempted && (
-                                    <div className="flex flex-col items-center justify-center p-6 bg-neutral-900/80 rounded-xl border border-white/10 backdrop-blur-sm animate-in zoom-in-95">
+                                    <div className="flex flex-col items-center justify-center p-6 bg-card/80 rounded-xl border border-border backdrop-blur-sm animate-in zoom-in-95">
                                         {isPass ? (
                                             <div className="text-center space-y-4">
                                                 <div className="flex items-center justify-center gap-2 text-green-400 text-xl font-bold">
                                                     <Trophy className="w-6 h-6" /> Excellent Work!
                                                 </div>
-                                                <p className="text-neutral-400">You achieved {accuracy}% accuracy.</p>
+                                                <p className="text-muted-foreground">You achieved {accuracy}% accuracy.</p>
                                                 <div className="flex gap-4 justify-center">
                                                     <Button onClick={() => { resetTranscript(); setHasAttempted(false); startListening(); }} variant="outline">
                                                         Retry
@@ -247,7 +247,7 @@ const ReadingPractice = () => {
                                                 <div className="text-yellow-400 text-lg font-bold">
                                                     Almost there!
                                                 </div>
-                                                <p className="text-neutral-400">You need 80% accuracy to proceed. Current: {accuracy}%</p>
+                                                <p className="text-muted-foreground">You need 80% accuracy to proceed. Current: {accuracy}%</p>
                                                 <Button onClick={() => { resetTranscript(); setHasAttempted(false); startListening(); }} variant="default" className="bg-yellow-600 hover:bg-yellow-700">
                                                     Try Again
                                                     <RefreshCw className="w-4 h-4 ml-2" />
@@ -278,7 +278,7 @@ const ReadingPractice = () => {
                                         <Button
                                             size="icon"
                                             variant="outline"
-                                            className="h-16 w-16 rounded-full border-white/10 hover:bg-white/10"
+                                            className="h-16 w-16 rounded-full border-border hover:bg-muted"
                                             onClick={() => speak(selectedPassage.content)}
                                             disabled={isListening}
                                             title="Listen to pronunciation"
@@ -290,13 +290,13 @@ const ReadingPractice = () => {
                                         <Button
                                             size="icon"
                                             variant="outline"
-                                            className="h-16 w-16 rounded-full border-white/10 hover:bg-white/10"
+                                            className="h-16 w-16 rounded-full border-border hover:bg-muted"
                                             onClick={() => { resetTranscript(); setAccuracy(0); setHasAttempted(false); }}
                                             disabled={isListening}
                                             title="Reset"
                                             aria-label="Reset reading attempt"
                                         >
-                                            <RefreshCw className="w-6 h-6 text-neutral-400" />
+                                            <RefreshCw className="w-6 h-6 text-muted-foreground" />
                                         </Button>
                                     </div>
                                 )}

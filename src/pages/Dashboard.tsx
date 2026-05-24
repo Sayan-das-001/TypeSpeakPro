@@ -310,14 +310,14 @@ const Dashboard = () => {
                         <CardHeader>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <CardTitle className="text-white text-xl">Weekly Practice Report</CardTitle>
+                                    <CardTitle className="text-foreground text-xl">Weekly Practice Report</CardTitle>
                                     <CardDescription className="text-muted-foreground">
                                         Performance analytics for the last 7 days.
                                     </CardDescription>
                                 </div>
-                                <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-lg border border-white/5">
+                                <div className="flex items-center gap-2 bg-muted px-3 py-1 rounded-lg border border-border">
                                     <Calendar className="w-4 h-4 text-teal-400" />
-                                    <span className="text-xs font-medium text-neutral-300">Last 7 Days</span>
+                                    <span className="text-xs font-medium text-foreground">Last 7 Days</span>
                                 </div>
                             </div>
                         </CardHeader>
@@ -387,7 +387,7 @@ const Dashboard = () => {
                     {/* Recent Activity */}
                     <Card className="col-span-1 bg-card border-border backdrop-blur-md">
                         <CardHeader>
-                            <CardTitle className="text-white text-xl">Recent Activity</CardTitle>
+                            <CardTitle className="text-foreground text-xl">Recent Activity</CardTitle>
                             <CardDescription className="text-muted-foreground">
                                 Latest session breakdown.
                             </CardDescription>
@@ -398,9 +398,9 @@ const Dashboard = () => {
                                     <EmptyState title="No activity yet" description="Complete a typing test to see your latest sessions here." className="py-8" />
                                 ) : (
                                     recentActivity.map((item, i) => (
-                                        <div key={i} className="flex items-center justify-between border-b border-white/5 pb-3 last:border-0 last:pb-0 hover:bg-white/5 p-2 rounded-lg transition-colors cursor-default">
+                                        <div key={i} className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0 hover:bg-muted p-2 rounded-lg transition-colors cursor-default">
                                             <div className="flex flex-col">
-                                                <span className="text-sm font-medium text-white capitalize">{item.mode || 'words'} Test</span>
+                                                <span className="text-sm font-medium text-foreground capitalize">{item.mode || 'words'} Test</span>
                                                 <span className="text-xs text-muted-foreground">{format(new Date(item.created_at), 'MM/dd HH:mm')}</span>
                                             </div>
                                             <div className="flex items-center gap-4">
@@ -411,10 +411,10 @@ const Dashboard = () => {
                                     ))
                                 )}
                             </div>
-                            <div className="mt-6 pt-4 border-t border-white/5">
+                            <div className="mt-6 pt-4 border-t border-border">
                                 <button
                                     onClick={() => setIsHistoryOpen(true)}
-                                    className="w-full py-2 text-sm text-center text-muted-foreground hover:text-white transition-colors"
+                                    className="w-full py-2 text-sm text-center text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                     View All History
                                 </button>
@@ -427,22 +427,22 @@ const Dashboard = () => {
                 {isHistoryOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
                         <div className="bg-card border border-border rounded-xl w-full max-w-4xl max-h-[80vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-300">
-                            <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                            <div className="p-6 border-b border-border flex items-center justify-between">
                                 <div>
                                     <h2 className="text-2xl font-bold text-foreground">Typing History</h2>
                                     <p className="text-sm text-muted-foreground">Complete record of your practice sessions.</p>
                                 </div>
                                 <button
                                     onClick={() => setIsHistoryOpen(false)}
-                                    className="p-2 hover:bg-white/10 rounded-full transition-colors text-muted-foreground hover:text-white"
+                                    className="p-2 hover:bg-muted rounded-full transition-colors text-muted-foreground hover:text-foreground"
                                 >
                                     ✕
                                 </button>
                             </div>
                             <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar">
-                                <div className="rounded-lg border border-white/5 overflow-hidden">
+                                <div className="rounded-lg border border-border overflow-hidden">
                                     <table className="w-full text-sm text-left">
-                                        <thead className="bg-white/5 text-muted-foreground font-medium">
+                                        <thead className="bg-muted text-muted-foreground font-medium">
                                             <tr>
                                                 <th className="px-4 py-3">Date</th>
                                                 <th className="px-4 py-3">Mode</th>
@@ -452,11 +452,11 @@ const Dashboard = () => {
                                                 <th className="px-4 py-3">Errors</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-white/5">
+                                        <tbody className="divide-y divide-border">
                                             {fullHistory.map((item, i) => (
-                                                <tr key={i} className="hover:bg-white/5 transition-colors">
-                                                    <td className="px-4 py-3 text-neutral-300">{format(new Date(item.created_at), 'MMM dd, yyyy HH:mm')}</td>
-                                                    <td className="px-4 py-3 capitalize text-neutral-300">
+                                                <tr key={i} className="hover:bg-muted transition-colors">
+                                                    <td className="px-4 py-3 text-foreground">{format(new Date(item.created_at), 'MMM dd, yyyy HH:mm')}</td>
+                                                    <td className="px-4 py-3 capitalize text-foreground">
                                                         <span className="px-2 py-0.5 rounded-full bg-muted border border-border text-xs">
                                                             {item.mode || 'words'}
                                                         </span>
@@ -470,14 +470,14 @@ const Dashboard = () => {
                                         </tbody>
                                     </table>
                                     {fullHistory.length === 0 && (
-                                        <div className="p-8 text-center text-neutral-500">No history available yet.</div>
+                                        <div className="p-8 text-center text-muted-foreground">No history available yet.</div>
                                     )}
                                 </div>
                             </div>
-                            <div className="p-4 border-t border-white/5 flex justify-end">
+                            <div className="p-4 border-t border-border flex justify-end">
                                 <button
                                     onClick={() => setIsHistoryOpen(false)}
-                                    className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm font-medium"
+                                    className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors text-sm font-medium"
                                 >
                                     Close
                                 </button>

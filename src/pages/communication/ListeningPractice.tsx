@@ -137,7 +137,7 @@ const ListeningPractice = () => {
     // safe check
     if (!scenario) {
         return (
-            <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
+            <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
                 <div className="text-center">
                     <p className="mb-4">No scenarios found for this level.</p>
                     <Button onClick={() => setSelectedLevel('All')}>Show All</Button>
@@ -147,21 +147,21 @@ const ListeningPractice = () => {
     }
 
     return (
-        <div className="min-h-screen bg-neutral-950 text-white font-sans selection:bg-teal-500/30 flex flex-col">
+        <div className="min-h-screen bg-background text-foreground font-sans selection:bg-teal-500/30 flex flex-col">
             <Navbar forceOpaque={true} />
 
             <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
                 <div className="flex gap-4 mb-8">
                     <Button
                         variant="ghost"
-                        className="hover:text-teal-400 text-neutral-400 pl-0"
+                        className="hover:text-teal-400 text-muted-foreground pl-0"
                         onClick={() => navigate('/voice-practice/communication')}
                     >
                         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Modules
                     </Button>
                     <Button
                         variant="ghost"
-                        className="hover:text-teal-400 text-neutral-400 pl-0"
+                        className="hover:text-teal-400 text-muted-foreground pl-0"
                         onClick={() => navigate('/')}
                     >
                         <Home className="w-4 h-4 mr-2" /> Home
@@ -179,7 +179,7 @@ const ListeningPractice = () => {
                                     px-4 py-2 rounded-full border transition-all text-sm font-medium
                                     ${selectedLevel === level
                                         ? 'bg-teal-500 text-white border-teal-500 shadow-lg shadow-teal-500/20'
-                                        : 'bg-neutral-900 text-neutral-400 border-white/10 hover:bg-white/5'}
+                                        : 'bg-card text-muted-foreground border-border hover:bg-muted'}
                                 `}
                             >
                                 {level}
@@ -188,13 +188,13 @@ const ListeningPractice = () => {
                     </div>
 
                     {/* Audio Player Card */}
-                    <Card className="bg-neutral-900/50 border-white/5">
+                    <Card className="bg-card/50 border-border">
                         <CardHeader>
                             <div className="flex justify-between items-center flex-wrap gap-4">
                                 <CardTitle className="text-2xl flex items-center gap-2">
                                     <Ear className="w-6 h-6 text-teal-400" />
                                     {scenario.title}
-                                    <span className={`text-xs px-2 py-0.5 rounded border border-white/10 ${scenario.level === 'Easy' ? 'text-green-400 bg-green-500/10' :
+                                    <span className={`text-xs px-2 py-0.5 rounded border border-border ${scenario.level === 'Easy' ? 'text-green-400 bg-green-500/10' :
                                         scenario.level === 'Medium' ? 'text-yellow-400 bg-yellow-500/10' :
                                             'text-red-400 bg-red-500/10'
                                         }`}>
@@ -203,11 +203,11 @@ const ListeningPractice = () => {
                                 </CardTitle>
 
                                 <div className="flex items-center gap-3">
-                                    <Globe className="w-4 h-4 text-neutral-400" />
+                                    <Globe className="w-4 h-4 text-muted-foreground" />
                                     <select
                                         value={selectedAccent}
                                         onChange={(e) => setSelectedAccent(e.target.value)}
-                                        className="bg-black/40 border border-white/10 rounded-lg px-3 py-1 text-sm text-neutral-200 focus:outline-none focus:border-teal-500"
+                                        className="bg-background border border-border rounded-lg px-3 py-1 text-sm text-foreground focus:outline-none focus:border-teal-500"
                                     >
                                         <option value="en-US">🇺🇸 US English</option>
                                         <option value="en-GB">🇬🇧 UK English</option>
@@ -230,8 +230,8 @@ const ListeningPractice = () => {
                                     {isSpeaking ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
                                 </Button>
                             </div>
-                            <p className="text-neutral-400 text-sm">Click play to listen to the scenario.</p>
-                            <p className="text-neutral-500 text-xs mt-2">{filteredScenarios.length} scenarios in this list</p>
+                            <p className="text-muted-foreground text-sm">Click play to listen to the scenario.</p>
+                            <p className="text-muted-foreground text-xs mt-2">{filteredScenarios.length} scenarios in this list</p>
                             <InlineError error={speechError} onRetry={handlePlay} className="mt-4 w-full max-w-md" />
                         </CardContent>
                     </Card>
@@ -239,7 +239,7 @@ const ListeningPractice = () => {
                     {/* Quiz Section */}
                     <div className="space-y-6">
                         {scenario.questions.map((q, qIndex) => (
-                            <Card key={qIndex} className="bg-neutral-900/50 border-white/5">
+                            <Card key={qIndex} className="bg-card/50 border-border">
                                 <CardContent className="p-6">
                                     <h3 className="font-semibold text-lg mb-4">{qIndex + 1}. {q.q}</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -247,7 +247,7 @@ const ListeningPractice = () => {
                                             const isSelected = userAnswers[qIndex] === optIndex;
                                             const isCorrect = q.answer === optIndex;
 
-                                            let cardStyle = "border-white/10 hover:bg-white/5";
+                                            let cardStyle = "border-border hover:bg-muted";
                                             let animation = "";
 
                                             if (showResults) {
@@ -256,7 +256,7 @@ const ListeningPractice = () => {
                                                     cardStyle = "border-red-500 bg-red-500/10 text-red-400";
                                                     animation = "animate-[shake_0.5s_ease-in-out]";
                                                 }
-                                                else if (!isSelected) cardStyle = "opacity-50 border-white/5"; // Dim others
+                                                else if (!isSelected) cardStyle = "opacity-50 border-border"; // Dim others
                                             } else if (isSelected) {
                                                 cardStyle = "border-teal-500 bg-teal-500/10 text-teal-400";
                                             }
