@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { RotateCcw, Hash, Type, AlignLeft, type LucideIcon, Pilcrow, Trophy } from 'lucide-react';
@@ -21,10 +21,6 @@ import MultiplayerModal from './MultiplayerModal';
 import MultiplayerResults from './MultiplayerResults';
 import { Loader2 } from 'lucide-react';
 import { Home } from 'lucide-react';
-import type { RoomConfig } from '@/hooks/useMultiplayer';
-import { InlineError, SaveIndicator } from '@/components/async';
-import { useAsyncState } from '@/hooks/useAsyncState';
-import { logAsyncError, toUserSafeError } from '@/types/async';
 
 import {
     COMMON_WORDS, WORDS_EASY, WORDS_HARD,
@@ -35,36 +31,11 @@ import {
     generateWords, generateSentences, applyTextTransformations
 } from '@/lib/text-generation';
 
-type TypingConfigUpdate = Partial<Pick<RoomConfig, 'mode' | 'duration' | 'difficulty' | 'text'>>;
-
-const generateTextForConfig = (
-    mode: TypingMode,
-    difficulty: Difficulty,
-    includeNumbers: boolean,
-    includePunctuation: boolean
-) => {
-    if (mode === 'words') {
-        return generateWords(100, includeNumbers, includePunctuation, difficulty);
-    }
-
-    if (mode === 'sentences') {
-        const rawText = generateSentences(100, difficulty);
-        return applyTextTransformations(rawText, includeNumbers, includePunctuation);
-    }
-
-    let sourceParagraphs = PARAGRAPHS_MEDIUM;
-    if (difficulty === 'easy') sourceParagraphs = PARAGRAPHS_EASY;
-    if (difficulty === 'hard') sourceParagraphs = PARAGRAPHS_HARD;
-
-    const rawText = sourceParagraphs[Math.floor(Math.random() * sourceParagraphs.length)];
-    return applyTextTransformations(rawText, includeNumbers, includePunctuation);
-};
-
 interface TypingTestProps {
     onComplete?: (stats: { wpm: number; accuracy: number; errorCount: number }) => void;
     initialMultiplayer?: boolean;
     aiMode?: boolean;
-    initialConfig?: RoomConfig;
+    initialConfig?: any; // Avoiding deep imports for RoomConfig
 }
 
 const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, initialConfig }: TypingTestProps) => {
@@ -80,8 +51,10 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
     // Select the active interface based on mode
     const multiplayer: any = aiMode ? aiInterface : mpInterface;
     const [isMultiplayerOpen, setIsMultiplayerOpen] = useState(initialMultiplayer);
+    const [targetText, setTargetText] = useState(() => generateWords(100, false, false, 'medium'));
     const [userInput, setUserInput] = useState('');
     const [startTime, setStartTime] = useState<number | null>(null);
+    const [timeLeft, setTimeLeft] = useState(30);
     const [isActive, setIsActive] = useState(false);
     const [wpm, setWpm] = useState(0);
     const [accuracy, setAccuracy] = useState(100);
@@ -99,99 +72,14 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
     }, [multiplayer.gameState, multiplayer.startTime]);
 
     // Config State
+    const [mode, setMode] = useState<TypingMode>('words');
+    const [difficulty, setDifficulty] = useState<Difficulty>('medium');
+    const [selectedTime, setSelectedTime] = useState(30);
     const [includeNumbers, setIncludeNumbers] = useState(false);
     const [includePunctuation, setIncludePunctuation] = useState(false);
-    const [activeConfig, setActiveConfig] = useState<RoomConfig>(() => {
-        const mode = initialConfig?.mode ?? 'words';
-        const difficulty = initialConfig?.difficulty ?? 'medium';
-        const duration = initialConfig?.duration ?? 30;
-        const text = initialConfig?.text || generateTextForConfig(mode, difficulty, false, false);
-
-        return { mode, difficulty, duration, text };
-    });
-    const { mode, difficulty, duration: selectedTime, text: targetText } = activeConfig;
-    const [timeLeft, setTimeLeft] = useState(() => activeConfig.duration);
 
     const [isFinished, setIsFinished] = useState(false);
     const [history, setHistory] = useState<{ time: number; wpm: number; raw: number }[]>([]);
-    const inputRef = useRef<HTMLInputElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const saveState = useAsyncState<void>();
-    const saveInFlightRef = useRef(false);
-    const lastSavePayloadRef = useRef<any>(null);
-    const navigate = useNavigate();
-
-    const resetSessionState = useCallback((duration: number) => {
-        setUserInput('');
-        setStartTime(null);
-        setTimeLeft(duration);
-        setIsActive(false);
-        setIsFinished(false);
-        setWpm(0);
-        setAccuracy(100);
-        setErrorCount(0);
-        setHistory([]);
-        saveState.reset();
-        lastSavePayloadRef.current = null;
-        if (inputRef.current) inputRef.current.focus();
-    }, [saveState]);
-
-    const saveTestResult = useCallback(async (payload: {
-        wpm: number;
-        accuracy: number;
-        errorCount: number;
-        time: number;
-        mode: TypingMode;
-    }) => {
-        lastSavePayloadRef.current = payload;
-
-        if (!user?.id) {
-            if (user) {
-                saveState.setError({
-                    title: 'Progress not saved',
-                    message: 'Your profile is signed in, but the database profile is not ready yet.',
-                    recoveryHint: 'Refresh or sign in again before saving new results.',
-                    retryable: false,
-                }, false);
-            }
-            return;
-        }
-
-        if (saveInFlightRef.current) return;
-        saveInFlightRef.current = true;
-        saveState.setStatus('saving');
-
-        try {
-            const { error } = await supabase
-                .from('test_results')
-                .insert({
-                    user_id: user.id,
-                    wpm: payload.wpm,
-                    accuracy: payload.accuracy,
-                    error_count: payload.errorCount,
-                    time_duration: payload.time,
-                    mode: payload.mode
-                });
-
-            if (error) throw error;
-            saveState.setData(undefined, 'success');
-            toast.success("Result saved to history!");
-        } catch (err) {
-            logAsyncError('typing.saveResult', err);
-            saveState.setError(toUserSafeError(err, {
-                title: 'Could not save your result',
-                message: 'Your score is still visible here. Retry saving when your connection is stable.',
-            }));
-        } finally {
-            saveInFlightRef.current = false;
-        }
-    }, [saveState, user]);
-
-    const retrySave = useCallback(() => {
-        if (lastSavePayloadRef.current) {
-            saveTestResult(lastSavePayloadRef.current);
-        }
-    }, [saveTestResult]);
 
     // Automatically open multiplayer modal if prop passed OR if URL has ?room=
     // Automatically open multiplayer modal if prop passed OR if URL has ?room=
@@ -237,10 +125,20 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
     // Sync Local State with Room Config (Clients)
     useEffect(() => {
         if (multiplayer.roomConfig && !multiplayer.isHost) {
-            setActiveConfig(multiplayer.roomConfig);
-            resetSessionState(multiplayer.roomConfig.duration);
+            setMode(multiplayer.roomConfig.mode);
+            setDifficulty(multiplayer.roomConfig.difficulty);
+            setSelectedTime(multiplayer.roomConfig.duration);
+            setTargetText(multiplayer.roomConfig.text);
+
+            // Force reset local test state
+            setUserInput('');
+            setStartTime(null);
+            setTimeLeft(multiplayer.roomConfig.duration);
+            setIsActive(false);
+            setWpm(0);
+            setAccuracy(100);
         }
-    }, [multiplayer.roomConfig, multiplayer.isHost, resetSessionState]);
+    }, [multiplayer.roomConfig, multiplayer.isHost]);
 
 
     // Handle Game Start Countdown
@@ -257,69 +155,44 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
         }
     }, [multiplayer.gameState, multiplayer.startTime]);
 
-    const resetTest = useCallback((config: TypingConfigUpdate = {}) => {
-        const nextMode = config.mode ?? mode;
-        const nextDifficulty = config.difficulty ?? difficulty;
-        const nextDuration = config.duration ?? selectedTime;
-        const nextText = config.text || generateTextForConfig(
-            nextMode,
-            nextDifficulty,
-            includeNumbers,
-            includePunctuation
-        );
+    const inputRef = useRef<HTMLInputElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
 
-        setActiveConfig({
-            mode: nextMode,
-            difficulty: nextDifficulty,
-            duration: nextDuration,
-            text: nextText
-        });
-        resetSessionState(nextDuration);
-    }, [difficulty, includeNumbers, includePunctuation, mode, resetSessionState, selectedTime]);
-
-    const applyConfig = useCallback((
-        config: TypingConfigUpdate,
-        options: { includeNumbers?: boolean; includePunctuation?: boolean } = {}
-    ) => {
-        const nextMode = config.mode ?? mode;
-        const nextDifficulty = config.difficulty ?? difficulty;
-        const nextDuration = config.duration ?? selectedTime;
-        const nextIncludeNumbers = options.includeNumbers ?? includeNumbers;
-        const nextIncludePunctuation = options.includePunctuation ?? includePunctuation;
-        const nextText = config.text || generateTextForConfig(
-            nextMode,
-            nextDifficulty,
-            nextIncludeNumbers,
-            nextIncludePunctuation
-        );
-
-        setIncludeNumbers(nextIncludeNumbers);
-        setIncludePunctuation(nextIncludePunctuation);
-        setActiveConfig({
-            mode: nextMode,
-            difficulty: nextDifficulty,
-            duration: nextDuration,
-            text: nextText
-        });
-        resetSessionState(nextDuration);
-    }, [difficulty, includeNumbers, includePunctuation, mode, resetSessionState, selectedTime]);
-
+    // Initialize test
     useEffect(() => {
-        if (!initialConfig) return;
+        resetTest();
+    }, [selectedTime, includeNumbers, includePunctuation, mode, difficulty]);
 
-        const nextText = initialConfig.text || generateTextForConfig(
-            initialConfig.mode,
-            initialConfig.difficulty,
-            false,
-            false
-        );
+    const resetTest = () => {
+        let text = '';
+        if (mode === 'words') {
+            text = generateWords(100, includeNumbers, includePunctuation, difficulty);
+        } else if (mode === 'sentences') {
+            const rawText = generateSentences(100, difficulty);
+            text = applyTextTransformations(rawText, includeNumbers, includePunctuation);
+        } else {
+            // Paragraph Mode
+            let sourceParagraphs = PARAGRAPHS_MEDIUM;
+            if (difficulty === 'easy') sourceParagraphs = PARAGRAPHS_EASY;
+            if (difficulty === 'hard') sourceParagraphs = PARAGRAPHS_HARD;
 
-        setActiveConfig({
-            ...initialConfig,
-            text: nextText
-        });
-        resetSessionState(initialConfig.duration);
-    }, [initialConfig, resetSessionState]);
+            const rawText = sourceParagraphs[Math.floor(Math.random() * sourceParagraphs.length)];
+            text = applyTextTransformations(rawText, includeNumbers, includePunctuation);
+        }
+
+        setTargetText(text);
+        setUserInput('');
+        setStartTime(null);
+        setTimeLeft(selectedTime);
+        setIsActive(false);
+        setIsFinished(false);
+        setWpm(0);
+        setAccuracy(100);
+        setErrorCount(0);
+        setHistory([]);
+        if (inputRef.current) inputRef.current.focus();
+    };
 
     const handleComplete = useCallback(() => {
         setIsFinished(true); // Stop input
@@ -338,13 +211,6 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
 
         setWpm(finalWpm);
         setAccuracy(finalAccuracy); // Update local state
-        saveTestResult({
-            wpm: finalWpm,
-            accuracy: finalAccuracy,
-            errorCount,
-            time: selectedTime,
-            mode
-        });
 
         // Submit to Multiplayer if active
         if (multiplayer.roomCode && multiplayer.completeRace) {
@@ -359,7 +225,7 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
         if (onComplete) {
             onComplete({ wpm: finalWpm, accuracy: finalAccuracy, errorCount });
         }
-    }, [userInput, targetText, startTime, selectedTime, errorCount, multiplayer, onComplete, saveTestResult, mode]);
+    }, [userInput, targetText, startTime, selectedTime, errorCount, multiplayer, onComplete]);
 
     // Check for completion
     useEffect(() => {
@@ -449,7 +315,50 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
             });
         }
 
-        await saveTestResult({ wpm, accuracy, errorCount, time: selectedTime, mode });
+        // Save to Supabase if user is logged in
+        console.log("EndTest called. User:", user);
+
+        if (user?.id) {
+            console.log("Attempting to save result to Supabase...", {
+                user_id: user.id,
+                wpm,
+                accuracy,
+                errorCount,
+                time: selectedTime,
+                mode
+            });
+
+            try {
+                const { data, error } = await supabase
+                    .from('test_results')
+                    .insert({
+                        user_id: user.id,
+                        wpm: wpm,
+                        accuracy: accuracy,
+                        error_count: errorCount,
+                        time_duration: selectedTime,
+                        mode: mode
+                    })
+                    .select();
+
+                if (error) {
+                    console.error("Supabase SAVE ERROR:", error);
+                    // Don't toast error to user if it's just a config issue, maybe silent fail or debug log
+                    // toast.error(`Failed to save history: ${error.message}`); 
+                } else {
+                    console.log("Result saved successfully!", data);
+                    toast.success("Result saved to history!");
+                }
+            } catch (err) {
+                console.error("Unexpected error saving result:", err);
+                // Prevent crash
+            }
+        } else {
+            console.warn("User ID missing, cannot save result. User object:", user);
+            if (user) {
+                toast.warning("Not connected to database (User ID missing).");
+            }
+        }
 
         if (onComplete) {
             onComplete({ wpm, accuracy, errorCount });
@@ -483,35 +392,29 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
     const [activeCharIndex, setActiveCharIndex] = useState(0);
     const activeCharRef = useRef<HTMLSpanElement>(null);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         setActiveCharIndex(userInput.length);
 
-        // Scroll logic: Keep active line ~2nd line
-        if (activeCharRef.current && containerRef.current) {
-            const container = containerRef.current;
-            const activeChar = activeCharRef.current;
+        requestAnimationFrame(() => {
+            if (activeCharRef.current && containerRef.current) {
+                const container = containerRef.current;
+                const activeChar = activeCharRef.current;
 
-            // Simple logic: Scroll active char into view with some padding
-            const containerRect = container.getBoundingClientRect();
-            const charRect = activeChar.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                const charRect = activeChar.getBoundingClientRect();
 
-            const relativeTop = charRect.top - containerRect.top;
-            const lineHeight = 64; // approx 4rem
+                const offset =
+                    charRect.top -
+                    containerRect.top +
+                    container.scrollTop -
+                    container.clientHeight / 2;
 
-            // If character is below the 2nd line, scroll
-            if (relativeTop > lineHeight * 2) {
                 container.scrollTo({
-                    top: container.scrollTop + lineHeight,
-                    behavior: 'smooth'
-                });
-            } else if (relativeTop < lineHeight) {
-                // Check if we need to scroll up (backspacing)
-                container.scrollTo({
-                    top: container.scrollTop - lineHeight,
-                    behavior: 'smooth'
+                    top: offset,
+                    behavior: 'smooth',
                 });
             }
-        }
+        });
     }, [userInput]);
 
     // Render text with specific coloring
@@ -577,7 +480,7 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <button
-                                        onClick={() => applyConfig({ mode: 'words' })}
+                                        onClick={() => setMode('words')}
                                         className={cn(
                                             "flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-1 rounded-full",
                                             mode === 'words' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
@@ -595,7 +498,7 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <button
-                                        onClick={() => applyConfig({ mode: 'sentences' })}
+                                        onClick={() => setMode('sentences')}
                                         className={cn(
                                             "flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-1 rounded-full",
                                             mode === 'sentences' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
@@ -612,7 +515,7 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
 
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <button onClick={() => applyConfig({ mode: 'paragraphs' })}
+                                    <button onClick={() => setMode('paragraphs')}
                                         className={cn(
                                             "flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-1 rounded-full",
                                             mode === 'paragraphs' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
@@ -632,7 +535,7 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
                     {[15, 30, 60, 120].map(time => (
                         <button
                             key={time}
-                            onClick={() => applyConfig({ duration: time })}
+                            onClick={() => setSelectedTime(time)}
                             className={cn(
                                 "text-sm font-mono transition-all duration-200 px-3 py-1 rounded-full",
                                 selectedTime === time ? "bg-primary/20 text-primary font-bold shadow-glow-sm" : "text-muted-foreground hover:text-foreground"
@@ -646,24 +549,24 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
                     {/* Punctuation/Numbers toggle for ALL modes */}
                     <div className="flex items-center gap-1">
                         <button
-                            onClick={() => applyConfig({}, { includePunctuation: !includePunctuation })}
-                            className={cn(
-                                "flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-1 rounded-full",
-                                includePunctuation ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
-                            )}
-                        >
-                            <Hash className="w-3.5 h-3.5" />
-                            <span className="sr-only">symbols</span>
-                        </button>
-                        <button
-                            onClick={() => applyConfig({}, { includeNumbers: !includeNumbers })}
+                            onClick={() => setIncludeNumbers(!includeNumbers)}
                             className={cn(
                                 "flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-1 rounded-full",
                                 includeNumbers ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
                             )}
                         >
-                            <span className="font-mono font-bold text-xs">@</span>
+                            <Hash className="w-3.5 h-3.5" />
                             <span className="sr-only">numbers</span>
+                        </button>
+                        <button
+                            onClick={() => setIncludePunctuation(!includePunctuation)}
+                            className={cn(
+                                "flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-1 rounded-full",
+                                includePunctuation ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                            )}
+                        >
+                            <span className="font-mono font-bold text-xs">@</span>
+                            <span className="sr-only">punctuation</span>
                         </button>
                     </div>
 
@@ -672,7 +575,7 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
                         {(['easy', 'medium', 'hard'] as Difficulty[]).map((level) => (
                             <button
                                 key={level}
-                                onClick={() => applyConfig({ difficulty: level })}
+                                onClick={() => setDifficulty(level)}
                                 className={cn(
                                     "text-xs font-medium transition-colors px-2.5 py-1 rounded-full capitalize",
                                     difficulty === level ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
@@ -762,7 +665,7 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
             <div
                 ref={containerRef}
                 className={cn(
-                    "relative h-[280px] w-full overflow-hidden flex items-start justify-start text-3xl leading-[4rem] tracking-wide font-mono outline-none cursor-default rounded-xl bg-card p-4 border border-border",
+                    "relative h-[280px] w-full overflow-y-auto overflow-x-hidden scroll-smooth flex items-start justify-start text-3xl leading-[4rem] tracking-wide font-mono outline-none cursor-default rounded-xl bg-card p-4 border border-border",
                     isFinished ? "blur-sm opacity-50 grayscale pointer-events-none" : ""
                 )}
             >
@@ -796,7 +699,7 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
                 <input
                     ref={inputRef}
                     type="text"
-                    className="absolute inset-0 opacity-0 w-full h-full z-20 cursor-text"
+                    className="absolute opacity-0 w-full h-full z-20 cursor-text"
                     onChange={handleInputChange}
                     value={userInput}
                     onPaste={(e) => e.preventDefault()}
@@ -812,13 +715,6 @@ const TypingTest = ({ onComplete, initialMultiplayer = false, aiMode = false, in
 
             {/* Results Modal Overlay */}
 
-
-            <div className="flex justify-center pt-8">
-                <div className="flex flex-col items-center gap-3">
-                    <SaveIndicator status={saveState.status} />
-                    <InlineError error={saveState.error} onRetry={saveState.error?.retryable === false ? undefined : retrySave} />
-                </div>
-            </div>
 
             <div className="flex justify-center pt-8">
                 <Button variant="ghost" size="lg" onClick={resetTest} className="opacity-50 hover:opacity-100 transition-opacity">
